@@ -19,6 +19,7 @@ module BigintPk
   def self.install_patches!
     install_primary_key_patches!
     install_foreign_key_patches!
+    install_create_join_table_patches!
   end
 
   def self.install_primary_key_patches!
@@ -55,6 +56,20 @@ module BigintPk
         end
         alias_method_chain :references, :default_bigint_fk
       end
+    end
+  end
+
+  def self.install_create_join_table_patches!
+    ActiveRecord::ConnectionAdapters::SchemaStatements.class_eval do
+      def create_join_table_with_bigint_keys *args
+        options = args.extract_options!
+        column_options = options.delete(:column_options) || {}
+        column_options.reverse_merge!(type: :bigint)
+        options[:column_options] = column_options
+
+        create_join_table_without_bigint_keys( *args, options )
+      end
+      alias_method_chain :create_join_table, :bigint_keys
     end
   end
 end

@@ -59,14 +59,13 @@ module BigintPk
   end
 
   def install_patches!
-    ca = ActiveRecord::ConnectionAdapters
+    ca   = ActiveRecord::ConnectionAdapters
+    conf = ca::ConnectionSpecification::Resolver.new(ActiveRecord::Base.configurations).configurations[Rails.env]
 
-    if ca.const_defined? :PostgreSQLAdapter
+    if conf['adapter'] == 'postgresql'
       pk_module = PostgresBigintPrimaryKey
       ca::PostgreSQLAdapter::NATIVE_DATABASE_TYPES[:primary_key] = 'bigserial primary key'
-    end
-
-    if ca.const_defined? :AbstractMysqlAdapter
+    elsif conf['adapter'] =~ /mysql\d+/
       pk_module = MysqlBigintPrimaryKey
       ca::AbstractMysqlAdapter::NATIVE_DATABASE_TYPES[:primary_key] = 'bigint(20) auto_increment PRIMARY KEY'
       ca::AbstractMysqlAdapter::NATIVE_DATABASE_TYPES[:integer] = { :name => "bigint", :limit => 6 }

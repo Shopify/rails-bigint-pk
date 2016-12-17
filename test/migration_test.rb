@@ -1,10 +1,13 @@
 require 'minitest/autorun'
 require 'bigint_pk'
+require 'rails'
 
 class MigrationTest < Minitest::Test
   def setup
     super
-    ActiveRecord::Base.establish_connection(adapter: ENV['ADAPTER'] || "mysql2", database: "bigint_test")
+    Rails.env = 'test'
+    ActiveRecord::Base.configurations = YAML.load_file(File.join(File.dirname(__FILE__), 'conf', "#{ENV['ADAPTER'] || 'mysql2'}.yml"))
+    ActiveRecord::Base.establish_connection(:test)
     BigintPk.enable!
   end
 
@@ -19,7 +22,7 @@ class MigrationTest < Minitest::Test
     columns = connection.columns(:foo)
     assert_equal ['id'], columns.map(&:name)
     assert_equal [:integer], columns.map(&:type)
-    if ENV['ADAPTER'] == 'postgresql'
+    if ActiveRecord::Base.configurations['test']['adapter'] == 'postgresql'
       assert_equal ['bigint'], columns.map(&:sql_type)
       assert_equal "nextval('foo_id_seq'::regclass)", connection.exec_query("SELECT column_default FROM information_schema.columns WHERE table_name = 'foo' AND column_name = 'id'").first['column_default']
     else
@@ -37,7 +40,7 @@ class MigrationTest < Minitest::Test
     columns = connection.columns(:foo)
     assert_equal ['id', 'post_id'], columns.map(&:name)
     assert_equal [:integer, :integer], columns.map(&:type)
-    if ENV['ADAPTER'] == 'postgresql'
+    if ActiveRecord::Base.configurations['test']['adapter'] == 'postgresql'
       assert_equal ['bigint', 'bigint'], columns.map(&:sql_type)
     else
       assert_equal ['bigint(20)', 'bigint(20)'], columns.map(&:sql_type)

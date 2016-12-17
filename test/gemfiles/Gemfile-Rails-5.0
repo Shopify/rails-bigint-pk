@@ -3,4 +3,4 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in rails-bigint-pk.gemspec
 gemspec path: "../.."
 
-gem 'rails', '~> 4.2.0'
+gem 'rails', '~> 5.0.0'

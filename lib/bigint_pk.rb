@@ -11,6 +11,16 @@ module BigintPk
 
   private
 
+  module DefaultBigintPrimaryKey
+    def primary_key(name, type = :primary_key, **options)
+      if type == :primary_key
+        super(name, :bigint, **options)
+      else
+        super
+      end
+    end
+  end
+
   module PostgresBigintPrimaryKey
     def primary_key(name, type = :primary_key, **options)
       if type == :primary_key
@@ -64,7 +74,7 @@ module BigintPk
 
     [ca::TableDefinition,
      ca::Table].each do |abstract_table_type|
-      abstract_table_type.prepend(pk_module)
+      abstract_table_type.prepend(pk_module || DefaultBigintPrimaryKey)
       abstract_table_type.prepend(DefaultBigintForeignKeyReferences)
     end
   end
